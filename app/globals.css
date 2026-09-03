@@ -19,8 +19,51 @@
   }
 }
 
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
+}
+
+.annotation-btn {
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease;
+}
+
+.annotation-btn.is-hidden {
+  opacity: 0;
+  transform: scale(0.86);
+  pointer-events: none;
+}
+
+.piece-modal-backdrop {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.piece-modal-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.piece-modal-panel {
+  opacity: 0;
+  transform: translateY(18px) scale(0.96);
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+
+.piece-modal-backdrop.is-open .piece-modal-panel {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
