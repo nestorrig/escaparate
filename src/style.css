@@ -1,0 +1,235 @@
+*
+{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body
+{
+    height: 100%;
+    overflow: hidden;
+    background: #fc7f41;
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+.webgl
+{
+    position: fixed;
+    top: 0;
+    left: 0;
+    outline: none;
+}
+
+/**
+ * Loading bar
+ */
+.loading-bar
+{
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    height: 2px;
+    background: #ffffff;
+    transform: scaleX(0);
+    transform-origin: top left;
+    transition: transform 0.5s;
+    z-index: 10;
+}
+
+.loading-bar.ended
+{
+    transform: scaleX(0);
+    transform-origin: 100% 0;
+    transition: transform 1.5s ease-in-out;
+}
+
+/**
+ * Points of interest
+ */
+.point
+{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 5;
+    transition: opacity 0.28s ease;
+}
+
+.point.is-hidden
+{
+    opacity: 0;
+    pointer-events: none;
+}
+
+.point .label
+{
+    position: absolute;
+    top: -20px;
+    left: -20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f97316dd;
+    border: 1px solid #ffffff99;
+    color: #ffffff;
+    text-align: center;
+    line-height: 40px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transform: scale(0, 0);
+    transition: transform 0.3s, background 0.2s, color 0.2s;
+}
+
+.point .label:hover
+{
+    background: #ffffff;
+    color: #000000;
+}
+
+.point .text
+{
+    position: absolute;
+    top: 30px;
+    left: -120px;
+    width: 220px;
+    padding: 16px 20px;
+    border-radius: 4px;
+    background: #00000077;
+    border: 1px solid #ffffff77;
+    color: #ffffff;
+    line-height: 1.3em;
+    font-weight: 100;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.point .text strong
+{
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}
+
+.point:hover .text
+{
+    opacity: 1;
+}
+
+.point.visible .label
+{
+    transform: scale(1, 1);
+}
+
+/**
+ * Modal
+ */
+.piece-modal-backdrop
+{
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: #0000008c;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.piece-modal-backdrop.is-open
+{
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.piece-modal-panel
+{
+    width: 100%;
+    max-width: 32rem;
+    overflow: hidden;
+    border-radius: 16px;
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+    transition:
+        opacity 0.35s ease,
+        transform 0.35s ease;
+}
+
+.piece-modal-backdrop.is-open .piece-modal-panel
+{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.piece-modal-image
+{
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.piece-modal-body
+{
+    padding: 20px;
+    background: #ffffff;
+    color: #000000;
+}
+
+.piece-modal-label
+{
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #ea580c;
+}
+
+.piece-modal-author,
+.piece-modal-detail
+{
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.piece-modal-close
+{
+    margin-top: 16px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 999px;
+    background: #ea580c;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.piece-modal-close:hover
+{
+    background: #f97316;
+}
+
+@media (max-width: 768px)
+{
+    .point .label
+    {
+        top: -16px;
+        left: -16px;
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+        font-size: 12px;
+    }
+}

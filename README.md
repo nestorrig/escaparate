@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Escaparate
 
-## Getting Started
+Escaparate 3D hecho con [Vite](https://vite.dev) y [Three.js WebGPU](https://threejs.org/docs/#api/en/renderers/webgpu/WebGPURenderer) (`three/webgpu` + TSL), con una arquitectura de clases inspirada en [folio-2025](https://github.com/brunosimon/folio-2025).
 
-First, run the development server:
+## Scripts
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # servidor de desarrollo (abierto a la red local)
+npm run build    # build de producción en dist/
+npm run preview  # sirve el build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Parámetros de URL
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- `#inspector`: activa el Inspector de three (rendimiento, memoria y parámetros de luces y espejo).
+- `?quality=1|2|3`: fuerza el nivel de calidad (pixel ratio, resolución del espejo, tamaño de sombras).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Estructura
 
-## Learn More
+```
+src/
+  index.html, index.js, style.css
+  data/pieces.js          datos de las anotaciones (poster, móvil)
+  Experience/
+    Experience.js               singleton que crea y orquesta todos los módulos
+    Events.js             eventos con orden de ejecución
+    Ticker.js             loop (lo mueve renderer.setAnimationLoop)
+    Viewport.js           tamaño y pixel ratio
+    Quality.js            niveles de calidad según el dispositivo
+    ResourcesLoader.js    GLTF y texturas + barra de carga
+    Rendering.js          WebGPURenderer, sombras, Inspector
+    View.js               cámara + OrbitControls
+    Lighting.js           entorno (RoomEnvironment), luz ambiental y direccional
+    Overlay.js            fade de entrada
+    Annotations.js        puntos HTML proyectados con oclusión por raycast
+    Modal.js              detalle de cada pieza
+    World/
+      World.js            agrupa y centra la escena
+      Escaparate.js       modelo, alpha de los posters, flotación de los patos
+      Mirror.js           espejo con FBO (RenderTarget + cámara reflejada)
+      Michelle.js         personaje animado
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Orden del tick
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. `World` (flotación, animación) y `View` (controles)
+2. `Mirror` renderiza la escena desde la cámara reflejada en su FBO
+3. `Annotations` actualiza la posición y visibilidad de los puntos HTML
+4. `Rendering` renderiza el frame final
