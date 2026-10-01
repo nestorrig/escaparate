@@ -1,0 +1,25 @@
+{
+  "name": "Escaparate — Escaparate 3D interactivo de skateboards",
+  "short_name": "Escaparate",
+  "description": "Escaparate 3D interactivo de una tienda de skateboards, hecho con Three.js WebGPU y TSL.",
+  "lang": "es",
+  "start_url": "../",
+  "scope": "../",
+  "icons": [
+    {
+      "src": "./web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#004bff",
+  "background_color": "#004bff",
+  "display": "standalone"
+}
