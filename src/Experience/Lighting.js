@@ -1,7 +1,6 @@
 import * as THREE from "three/webgpu";
-import { RectAreaLightTexturesLib } from "three/addons/lights/RectAreaLightTexturesLib.js";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
-import { normalWorld, positionWorld, smoothstep, uniform } from "three/tsl";
+import { lights } from "three/tsl";
 import { Experience } from "./Experience.js";
 
 export const ENVIRONMENTS = {
@@ -10,6 +9,8 @@ export const ENVIRONMENTS = {
   "Ferndale studio 12": "./hdri/ferndale_studio_12_1k.hdr",
   "Rogland clear night": "./hdri/rogland_clear_night_1k.hdr",
 };
+
+const STREET_MESHES = ["asfalto", "Plano", "Plano1"];
 
 export const DEFAULT_ENVIRONMENT = "Ferndale studio 02";
 
@@ -87,23 +88,11 @@ export class Lighting {
   }
 
   /**
-   * White area light matching the "lampara" plane of the model, pointing down
+   * The "lampara" plane only glows; the light comes from one spot per skate, hanging from the lamp height
    */
   setLamp() {
-    THREE.RectAreaLightNode.setLTC(RectAreaLightTexturesLib.init());
-
-    const lamp = this.experience.world.escaparate.lamp;
-
-    lamp.geometry.computeBoundingBox();
-
-    const box = lamp.geometry.boundingBox.clone().applyMatrix4(lamp.matrix);
-    const size = box.getSize(new THREE.Vector3());
-    const center = box.getCenter(new THREE.Vector3());
-
-    this.lamp = new THREE.RectAreaLight("#ffffff", 2.5, size.x, size.z);
-    this.lamp.position.copy(center);
-    this.lamp.rotation.x = -Math.PI / 2;
-    lamp.parent.add(this.lamp);
+    const escaparate = this.experience.world.escaparate;
+    const lamp = escaparate.lamp;
 
     lamp.material = new THREE.MeshBasicMaterial({
       color: "#ffffff",
@@ -111,75 +100,56 @@ export class Lighting {
     });
     lamp.castShadow = false;
 
-    this.setLampShadow(lamp.parent, center);
-  }
+    lamp.updateWorldMatrix(true, false);
+    lamp.geometry.computeBoundingBox();
+    const lampBox = lamp.geometry.boundingBox
+      .clone()
+      .applyMatrix4(lamp.matrixWorld);
+    const height = 1.6;
 
-  /**
-   * RectAreaLight can't cast shadows, so a spot light at the same place, pointing down, provides them.
-   * The spot has no intensity: it only renders the shadow map, and the shadow catchers darken the shadowed areas.
-   */
-  setLampShadow(parent, center) {
-    const shadowSize = Math.min(this.experience.quality.shadows, 2048);
+    const shadowSize = Math.min(this.experience.quality.shadows, 1024);
 
-    this.lampShadow = new THREE.SpotLight("#ffffff", 0);
-    this.lampShadow.position.copy(center);
-    this.lampShadow.position.y -= 0.02;
-    this.lampShadow.target.position.set(center.x, center.y - 1, center.z);
-    this.lampShadow.angle = Math.PI / 2.5;
-    this.lampShadow.castShadow = true;
-    this.lampShadow.shadow.mapSize.set(shadowSize, shadowSize);
-    this.lampShadow.shadow.camera.near = 0.05;
-    this.lampShadow.shadow.camera.far = 3;
-    this.lampShadow.shadow.bias = -0.0005;
-    this.lampShadow.shadow.normalBias = 0.02;
-    this.lampShadow.shadow.radius = 20;
-    parent.add(this.lampShadow, this.lampShadow.target);
+    this.spots = {
+      intensity: 4,
+      angle: Math.PI / 7,
+      penumbra: 0.6,
+      radius: 4,
+      castShadow: true,
+    };
+    this.spotLights = escaparate.skates.map((skate) => {
+      const position = skate.getWorldPosition(new THREE.Vector3());
 
-    this.setShadowCatchers();
-  }
+      const spot = new THREE.SpotLight("#ffffff", this.spots.intensity);
+      spot.position.set(position.x, height, position.z);
+      spot.target = skate;
+      spot.angle = this.spots.angle;
+      spot.penumbra = this.spots.penumbra;
+      spot.decay = 2;
+      spot.castShadow = true;
+      spot.shadow.mapSize.set(shadowSize, shadowSize);
+      spot.shadow.camera.near = 0.05;
+      spot.shadow.camera.far = 3;
+      spot.shadow.bias = -0.0005;
+      spot.shadow.normalBias = 0.02;
+      spot.shadow.radius = this.spots.radius;
+      this.experience.scene.add(spot);
 
-  /**
-   * A shadow-only copy over every mesh of the escaparate, so the shadows add no light
-   */
-  setShadowCatchers() {
-    const escaparate = this.experience.world.escaparate;
-
-    this.lampShadow.updateWorldMatrix(true, false);
-    const lightPosition = uniform(
-      this.lampShadow.getWorldPosition(new THREE.Vector3()),
-    );
-    const toSurface = positionWorld.sub(lightPosition).normalize();
-
-    // The shadow mask alone also darkens surfaces outside the spot cone or facing away from it
-    const cone = smoothstep(
-      Math.cos(this.lampShadow.angle),
-      Math.cos(this.lampShadow.angle * 0.9),
-      toSurface.y.negate(),
-    );
-    const facing = smoothstep(0, 0.2, normalWorld.dot(toSurface.negate()));
-
-    this.shadowOpacity = uniform(0.6);
-    this.shadowCatcherMaterial = new THREE.ShadowNodeMaterial({
-      polygonOffset: true,
-      polygonOffsetFactor: -1,
-      polygonOffsetUnits: -1,
-    });
-    this.shadowCatcherMaterial.opacityNode = this.shadowOpacity
-      .mul(cone)
-      .mul(facing);
-    this.shadowCatchers = [];
-
-    const meshes = [];
-    escaparate.model.traverse((child) => {
-      if (child.isMesh && child !== escaparate.lamp) meshes.push(child);
+      return spot;
     });
 
-    for (const mesh of meshes) {
-      const catcher = new THREE.Mesh(mesh.geometry, this.shadowCatcherMaterial);
-      catcher.receiveShadow = true;
-      catcher.renderOrder = 1;
-      mesh.add(catcher);
-      this.shadowCatchers.push(catcher);
+    // The front spot's cone leaks through the shop window onto the street, so the street ignores the spots
+    const streetLights = lights([this.ambient]);
+    for (const name of STREET_MESHES)
+      escaparate.model.getObjectByName(name).material.lightsNode = streetLights;
+  }
+
+  updateSpots() {
+    for (const spot of this.spotLights) {
+      spot.intensity = this.spots.intensity;
+      spot.angle = this.spots.angle;
+      spot.penumbra = this.spots.penumbra;
+      spot.castShadow = this.spots.castShadow;
+      spot.shadow.radius = this.spots.radius;
     }
   }
 
@@ -204,18 +174,25 @@ export class Lighting {
       .add(this.experience.scene, "environmentIntensity", 0, 3, 0.01)
       .name("hdri intensidad");
     parameters.add(this.ambient, "intensity", 0, 3, 0.01).name("ambient");
-    parameters.add(this.lamp, "intensity", 0, 30, 0.1).name("lampara");
 
-    const lampShadow = parameters.addFolder("Sombras lampara");
-    lampShadow
-      .add(this.lampShadow, "castShadow")
-      .name("activas")
-      .onChange((active) => {
-        for (const catcher of this.shadowCatchers) catcher.visible = active;
-      });
-    lampShadow.add(this.shadowOpacity, "value", 0, 1, 0.01).name("oscuridad");
-    lampShadow
-      .add(this.lampShadow.shadow, "radius", 0, 20, 0.1)
-      .name("suavidad");
+    const spots = parameters.addFolder("Spots skates");
+    const update = () => this.updateSpots();
+    spots
+      .add(this.spots, "intensity", 0, 20, 0.1)
+      .name("intensidad")
+      .onChange(update);
+    spots
+      .add(this.spots, "angle", 0.05, Math.PI / 3, 0.01)
+      .name("apertura")
+      .onChange(update);
+    spots
+      .add(this.spots, "penumbra", 0, 1, 0.01)
+      .name("penumbra")
+      .onChange(update);
+    spots.add(this.spots, "castShadow").name("sombras").onChange(update);
+    spots
+      .add(this.spots, "radius", 0, 20, 0.1)
+      .name("suavidad sombra")
+      .onChange(update);
   }
 }
