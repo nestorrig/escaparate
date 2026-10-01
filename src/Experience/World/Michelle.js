@@ -11,6 +11,7 @@ export class Michelle {
     const gltf = this.experience.resources.michelleModel;
 
     this.group = new THREE.Group();
+    this.group.visible = false;
     this.group.scale.setScalar(0.8);
     this.group.add(gltf.scene);
     frame.parent.add(this.group);
@@ -19,7 +20,7 @@ export class Michelle {
 
     gltf.scene.traverse((child) => {
       if (child.isMesh) {
-        child.castShadow = true;
+        child.castShadow = false;
         child.receiveShadow = false;
       }
     });
@@ -38,7 +39,7 @@ export class Michelle {
     const box = frame.geometry.boundingBox.clone().applyMatrix4(frame.matrix);
     const center = box.getCenter(new THREE.Vector3());
 
-    this.group.position.set(center.x, 0, box.max.z + 0.5);
+    this.group.position.set(2, 0, box.max.z + 0.5);
   }
 
   setAnimation(gltf) {
@@ -57,6 +58,8 @@ export class Michelle {
     parameters.add(this.group, "visible").name("visible");
     parameters.add(this.group.position, "x", -2, 3, 0.01).name("x");
     parameters.add(this.group.position, "z", 0, 4, 0.01).name("z");
-    parameters.add(this.group.rotation, "y", -Math.PI, Math.PI, 0.01).name("rotation");
+    parameters
+      .add(this.group.rotation, "y", -Math.PI, Math.PI, 0.01)
+      .name("rotation");
   }
 }

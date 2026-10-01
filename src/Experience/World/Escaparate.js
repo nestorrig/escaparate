@@ -39,16 +39,28 @@ export class Escaparate
             if(!child.isMesh)
                 return
 
-            child.castShadow = true
             child.receiveShadow = true
         })
+
+        // Each spot redraws its casters every frame, so only what sits under the spots casts shadows
+        for(const name of [ 'Skates', 'Cubos' ])
+            this.model.getObjectByName(name).traverse((child) =>
+            {
+                if(child.isMesh)
+                    child.castShadow = true
+            })
 
         this.poster = this.model.getObjectByName('poster')
         this.letrero = this.model.getObjectByName('letrero')
         this.letreroBig = this.model.getObjectByName('letrero-big')
         this.frame = this.model.getObjectByName('marco')
-        this.lamp = this.model.getObjectByName('lampara')
+        this.lamps = [ 'lampara', 'lampara-small', 'lampara-small1' ].map((name) => this.model.getObjectByName(name))
         this.skates = this.model.getObjectByName('Skates').children.filter((child) => child.isMesh)
+
+        this.spots = this.model.getObjectByName('spots').children.map((group) => ({
+            group,
+            disc: group.children.find((child) => child.name.startsWith('Disco')),
+        }))
     }
 
     /**

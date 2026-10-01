@@ -1,85 +1,92 @@
-import * as THREE from 'three/webgpu'
+import * as THREE from "three/webgpu";
 
-import { Events } from './Events.js'
-import { Quality } from './Quality.js'
-import { Ticker } from './Ticker.js'
-import { Viewport } from './Viewport.js'
-import { ResourcesLoader } from './ResourcesLoader.js'
-import { Rendering } from './Rendering.js'
-import { View } from './View.js'
-import { Lighting, ENVIRONMENTS, DEFAULT_ENVIRONMENT, setupEnvironmentTexture } from './Lighting.js'
-import { Overlay } from './Overlay.js'
-import { World } from './World/World.js'
+import { Events } from "./Events.js";
+import { Quality } from "./Quality.js";
+import { Ticker } from "./Ticker.js";
+import { Viewport } from "./Viewport.js";
+import { ResourcesLoader } from "./ResourcesLoader.js";
+import { Rendering } from "./Rendering.js";
+import { View } from "./View.js";
+import {
+  Lighting,
+  ENVIRONMENTS,
+  DEFAULT_ENVIRONMENT,
+  setupEnvironmentTexture,
+} from "./Lighting.js";
+import { Overlay } from "./Overlay.js";
+import { World } from "./World/World.js";
 
-export class Experience
-{
-    static getInstance()
-    {
-        return Experience.instance
-    }
+export class Experience {
+  static getInstance() {
+    return Experience.instance;
+  }
 
-    constructor()
-    {
-        if(Experience.instance)
-            return Experience.instance
+  constructor() {
+    if (Experience.instance) return Experience.instance;
 
-        Experience.instance = this
+    Experience.instance = this;
 
-        this.init()
-    }
+    this.init();
+  }
 
-    async init()
-    {
-        this.domElement = document.querySelector('.experience')
-        this.canvasElement = this.domElement.querySelector('canvas.webgl')
+  async init() {
+    this.domElement = document.querySelector(".experience");
+    this.canvasElement = this.domElement.querySelector("canvas.webgl");
 
-        this.events = new Events()
-        this.sceneReady = false
+    this.events = new Events();
+    this.sceneReady = false;
 
-        this.scene = new THREE.Scene()
-        this.backgroundColor = new THREE.Color('#004bff')
-        this.scene.background = this.backgroundColor
+    this.scene = new THREE.Scene();
+    this.backgroundColor = new THREE.Color("#004bff");
+    this.scene.background = this.backgroundColor;
 
-        this.quality = new Quality()
-        this.ticker = new Ticker()
-        this.viewport = new Viewport(this.domElement)
-        this.resourcesLoader = new ResourcesLoader()
-        this.rendering = new Rendering()
-        await this.rendering.setRenderer()
+    this.quality = new Quality();
+    this.ticker = new Ticker();
+    this.viewport = new Viewport(this.domElement);
+    this.resourcesLoader = new ResourcesLoader();
+    this.rendering = new Rendering();
+    await this.rendering.setRenderer();
 
-        this.view = new View()
-        this.overlay = new Overlay()
-        this.rendering.start()
+    this.view = new View();
+    this.overlay = new Overlay();
+    this.rendering.start();
 
-        this.resourcesLoader.events.on('ended', () =>
-        {
-            this.overlay.reveal()
+    this.resourcesLoader.events.on("ended", () => {
+      this.overlay.reveal();
 
-            window.setTimeout(() =>
-            {
-                this.sceneReady = true
-                this.events.trigger('ready')
-            }, 1500)
-        })
+      window.setTimeout(() => {
+        this.sceneReady = true;
+        this.events.trigger("ready");
+      }, 1500);
+    });
 
-        this.resources = await this.resourcesLoader.load([
-            [ 'escaparateModel', './escaparate_2.glb', 'gltf' ],
-            [ 'michelleModel', './Michelle.glb', 'gltf' ],
-            [ 'posterTexture', './poster.png', 'texture', this.setupColorTexture ],
-            [ 'letreroTexture', './letrero.png', 'texture', this.setupColorTexture ],
-            [ 'letreroBigTexture', './letrero-big.png', 'texture', this.setupColorTexture ],
-            [ 'environmentTexture', ENVIRONMENTS[DEFAULT_ENVIRONMENT], 'hdr', setupEnvironmentTexture ],
-        ])
+    this.resources = await this.resourcesLoader.load([
+      ["escaparateModel", "./escaparate_2_v4.glb", "gltf"],
+      ["michelleModel", "./Michelle.glb", "gltf"],
+      ["posterTexture", "./poster.png", "texture", this.setupColorTexture],
+      ["letreroTexture", "./letrero.png", "texture", this.setupColorTexture],
+      [
+        "letreroBigTexture",
+        "./letrero-big.png",
+        "texture",
+        this.setupColorTexture,
+      ],
+      [
+        "environmentTexture",
+        ENVIRONMENTS[DEFAULT_ENVIRONMENT],
+        "hdr",
+        setupEnvironmentTexture,
+      ],
+    ]);
 
-        this.world = new World()
-        this.lighting = new Lighting()
-        this.view.setFromCameras(this.world.escaparate.cameras)
-    }
+    this.world = new World();
+    this.lighting = new Lighting();
+    this.view.setFromCameras(this.world.escaparate.cameras);
+  }
 
-    setupColorTexture(texture)
-    {
-        texture.colorSpace = THREE.SRGBColorSpace
-        texture.flipY = false
-        texture.anisotropy = 8
-    }
+  setupColorTexture(texture) {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.flipY = false;
+    texture.anisotropy = 8;
+  }
 }
