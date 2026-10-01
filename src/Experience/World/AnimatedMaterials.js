@@ -131,8 +131,19 @@ export function createTapeLayouts(params) {
     angle: uniform(0),
     phase: uniform(0),
     speedScale: uniform(1),
+    scroll: uniform(0),
     style: uniform(index),
   }));
+}
+
+/**
+ * The scroll is integrated on the CPU instead of using `time` in the shader,
+ * so changing the speed (or `factor`) slows the tapes down instead of jumping them.
+ */
+export function updateTapes(params, layouts, delta, factor = 1) {
+  for (const layout of layouts)
+    layout.scroll.value +=
+      delta * params.speed.value * layout.speedScale.value * factor;
 }
 
 /**
@@ -169,10 +180,7 @@ export function createTapesMaterial(
     const u = q.dot(along);
     const v = q.dot(across);
 
-    const scroll = time
-      .mul(params.speed)
-      .mul(layout.speedScale)
-      .add(layout.phase);
+    const scroll = layout.scroll.add(layout.phase);
     // flipY is off, so the top of the image is at v = 0
     const textV = v.div(params.textHeight).negate().add(0.5);
 

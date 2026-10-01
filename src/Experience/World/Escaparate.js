@@ -8,6 +8,7 @@ import {
   createTapesMaterial,
   createWallMaterial,
   randomizeTapes,
+  updateTapes,
 } from "./AnimatedMaterials.js";
 import { SkatesInteraction } from "./SkatesInteraction.js";
 
@@ -171,6 +172,8 @@ export class Escaparate {
       { map: resources.letreroPared2Texture, tapeColor: "#ffffff" },
     ]);
     this.tapeLayouts = createTapeLayouts(this.tapeParams);
+    // 0 stops every tape, 1 is the normal speed; animated by SkatesInteraction on hover
+    this.tapeMotion = { factor: 1 };
 
     const walls = [["pared3"], ["construccion1", "pared1"], ["pared2"]].map(
       (names) => {
@@ -329,11 +332,16 @@ export class Escaparate {
       spinQuaternion: new THREE.Quaternion(),
     }));
 
-    this.skatesInteraction = new SkatesInteraction(this.floats);
+    this.skatesInteraction = new SkatesInteraction(
+      this.floats,
+      this.tapeMotion,
+    );
   }
 
   update() {
-    const elapsed = this.experience.ticker.elapsed;
+    const { elapsed, delta } = this.experience.ticker;
+
+    updateTapes(this.tapeParams, this.tapeLayouts, delta, this.tapeMotion.factor);
 
     for (const float of this.floats) {
       const t = ((float.offset + elapsed) / 4) * float.speed;

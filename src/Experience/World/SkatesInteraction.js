@@ -9,10 +9,11 @@ const CLICK_TOLERANCE = 5;
  * Each float gets `spin` (radians around the board's long axis) and `lift` (extra height) that Escaparate.update applies.
  */
 export class SkatesInteraction {
-  constructor(floats) {
+  constructor(floats, tapeMotion) {
     this.experience = Experience.getInstance();
     this.canvas = this.experience.canvasElement;
     this.floats = floats;
+    this.tapeMotion = tapeMotion;
 
     this.raycaster = new THREE.Raycaster();
     this.pointer = new THREE.Vector2();
@@ -97,6 +98,15 @@ export class SkatesInteraction {
     if (this.hovered)
       gsap.to(this.hovered, { hover: 0, duration: 0.4, ease: "power2.out" });
     if (skate) gsap.to(skate, { hover: 1, duration: 0.25, ease: "power2.out" });
+
+    // Only when entering or leaving the skates, moving from one board to another keeps them stopped
+    if (!skate !== !this.hovered)
+      gsap.to(this.tapeMotion, {
+        factor: skate ? 0 : 1,
+        duration: skate ? 0.6 : 1.2,
+        ease: skate ? "power2.out" : "power2.inOut",
+        overwrite: true,
+      });
 
     this.hovered = skate;
     this.canvas.style.cursor = skate ? "pointer" : "";
