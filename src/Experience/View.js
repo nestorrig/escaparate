@@ -173,6 +173,18 @@ export class View {
 
     for (const button of this.viewButtons)
       button.addEventListener("click", () => this.goTo(button.dataset.view));
+
+    const keys = { o: "outdoor", i: "indoor" };
+
+    window.addEventListener("keydown", (event) => {
+      if (event.repeat || event.metaKey || event.ctrlKey || event.altKey)
+        return;
+      if (event.target.closest?.("input, textarea, select, [contenteditable]"))
+        return;
+
+      const view = keys[event.key.toLowerCase()];
+      if (view) this.goTo(view);
+    });
   }
 
   goTo(name) {
