@@ -53,7 +53,7 @@ export class Lighting {
       background: false,
     };
 
-    this.experience.scene.environmentIntensity = 0.32;
+    this.experience.scene.environmentIntensity = 0.05;
     this.changeEnvironment(DEFAULT_ENVIRONMENT);
   }
 
@@ -105,8 +105,8 @@ export class Lighting {
 
     const intensities = {
       lampara: 3,
-      "lampara-small": 3.2,
-      "lampara-small1": 3.4,
+      "lampara-small": 10.2,
+      "lampara-small1": 10.4,
     };
 
     this.lamps = this.experience.world.escaparate.lamps.map((lamp) => {

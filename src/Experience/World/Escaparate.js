@@ -9,6 +9,10 @@ import {
   createWallMaterial,
   randomizeTapes,
 } from "./AnimatedMaterials.js";
+import { SkatesInteraction } from "./SkatesInteraction.js";
+
+// Long axis of the skateboard geometry, so the spin reads as a kickflip
+const SPIN_AXIS = new THREE.Vector3(0, 0, 1);
 
 const FLOATS = [
   {
@@ -320,7 +324,10 @@ export class Escaparate {
       baseQuaternion: skate.quaternion.clone(),
       euler: new THREE.Euler(),
       quaternion: new THREE.Quaternion(),
+      spinQuaternion: new THREE.Quaternion(),
     }));
+
+    this.skatesInteraction = new SkatesInteraction(this.floats);
   }
 
   update() {
@@ -336,9 +343,11 @@ export class Escaparate {
         (sin / 20) * float.rotationIntensity,
       );
       float.quaternion.setFromEuler(float.euler);
+      float.spinQuaternion.setFromAxisAngle(SPIN_AXIS, float.spin);
       float.object.quaternion
         .copy(float.baseQuaternion)
-        .multiply(float.quaternion);
+        .multiply(float.quaternion)
+        .multiply(float.spinQuaternion);
 
       const y = THREE.MathUtils.mapLinear(
         sin / 10,
@@ -348,7 +357,7 @@ export class Escaparate {
         float.floatingRange[1],
       );
       float.object.position.copy(float.basePosition);
-      float.object.position.y += y * float.floatIntensity;
+      float.object.position.y += y * float.floatIntensity + float.lift;
     }
   }
 }
