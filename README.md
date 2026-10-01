@@ -37,7 +37,7 @@ src/
     Modal.js              detalle de cada pieza (sin usar por ahora)
     World/
       World.js            agrupa la escena en las coordenadas del glb
-      Escaparate.js       escaparate_2.glb: texturas de poster y letreros, flotación de los Skates
+      Escaparate.js       models/escaparate_2_v4.glb: texturas de poster y letreros, flotación de los Skates
       Michelle.js         personaje animado frente al "marco"
       Mirror.js           espejo con FBO (sin usar en esta escena)
 ```

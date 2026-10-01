@@ -61,25 +61,35 @@ export class Experience {
     });
 
     this.resources = await this.resourcesLoader.load([
-      ["escaparateModel", "./escaparate_2_v4.glb", "gltf"],
-      ["michelleModel", "./Michelle.glb", "gltf"],
-      ["posterTexture", "./poster.png", "texture", this.setupColorTexture],
-      ["letreroTexture", "./letrero.png", "texture", this.setupColorTexture],
+      ["escaparateModel", "./models/escaparate_2_v4.glb", "gltf"],
+      ["michelleModel", "./models/Michelle.glb", "gltf"],
+      [
+        "posterTexture",
+        "./textures/poster.png",
+        "texture",
+        this.setupColorTexture,
+      ],
+      [
+        "letreroTexture",
+        "./textures/letrero.png",
+        "texture",
+        this.setupColorTexture,
+      ],
       [
         "letreroBigTexture",
-        "./letrero-big.png",
+        "./textures/letrero-big.png",
         "texture",
         this.setupColorTexture,
       ],
       [
         "letreroParedTexture",
-        "./letrero_pared1.png",
+        "./textures/letrero_pared1.png",
         "texture",
         this.setupColorTexture,
       ],
       [
         "letreroPared2Texture",
-        "./letrero_pared2.png",
+        "./textures/letrero_pared2.png",
         "texture",
         this.setupColorTexture,
       ],
