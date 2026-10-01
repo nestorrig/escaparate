@@ -1,17 +1,20 @@
 const TIERS = {
-  1: { maxPixelRatio: 1.24, reflection: 256, shadows: 1024, antialias: false },
+  1: { maxPixelRatio: 1.5, reflection: 256, shadows: 1024, antialias: false },
   2: { maxPixelRatio: 1.6, reflection: 512, shadows: 2048, antialias: true },
   3: { maxPixelRatio: 1.8, reflection: 1024, shadows: 4096, antialias: true },
 };
 
 export class Quality {
   constructor() {
+    const search = new URLSearchParams(location.search);
+
     this.isMobile =
+      search.has("mobile") ||
       /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
       (navigator.maxTouchPoints > 1 &&
         window.matchMedia("(pointer: coarse)").matches);
 
-    const forced = Number(new URLSearchParams(location.search).get("quality"));
+    const forced = Number(search.get("quality"));
 
     if (TIERS[forced]) this.tier = forced;
     else if (this.isMobile) this.tier = 1;

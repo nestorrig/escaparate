@@ -72,6 +72,8 @@ export class Escaparate {
         if (child.isMesh) child.castShadow = true;
       });
 
+    this.model.getObjectByName("asfalto").scale.multiplyScalar(3);
+
     this.poster = this.model.getObjectByName("poster");
     this.letrero = this.model.getObjectByName("letrero");
     this.letreroBig = this.model.getObjectByName("letrero-big");

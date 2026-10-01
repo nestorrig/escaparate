@@ -93,7 +93,11 @@ export class Experience {
 
     this.world = new World();
     this.lighting = new Lighting();
-    this.view.setFromCameras(this.world.escaparate.cameras);
+    this.view.setFromCameras(
+      this.world.escaparate.cameras,
+      this.world.escaparate,
+    );
+    this.view.setDebug();
   }
 
   setupColorTexture(texture) {
