@@ -72,6 +72,18 @@ export class Experience {
         this.setupColorTexture,
       ],
       [
+        "letreroParedTexture",
+        "./letrero_pared1.png",
+        "texture",
+        this.setupColorTexture,
+      ],
+      [
+        "letreroPared2Texture",
+        "./letrero_pared2.png",
+        "texture",
+        this.setupColorTexture,
+      ],
+      [
         "environmentTexture",
         ENVIRONMENTS[DEFAULT_ENVIRONMENT],
         "hdr",
