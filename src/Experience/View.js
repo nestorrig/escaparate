@@ -1,9 +1,22 @@
 import * as THREE from "three/webgpu";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import gsap from "gsap";
 import { Experience } from "./Experience.js";
 
 // Starting camera position on mobile; the distance limits are relative to it
 const MOBILE_CAMERA_POSITION = new THREE.Vector3(5, 1.24, 7.6);
+
+// true: desktop orbits like mobile (starting from the glb camera). false: desktop uses the cursor parallax
+const DESKTOP_ORBIT = false;
+
+// Desktop camera presets; "outdoor" is filled from the glb camera in setFromCameras
+const OUTDOOR_PARALLAX = { amplitudeX: 0.75, amplitudeY: 0.65, smoothing: 2.5 };
+
+const INDOOR_VIEW = {
+  position: new THREE.Vector3(0.471, 0.917, 3.427),
+  target: new THREE.Vector3(0.434, 0.9, 0.843),
+  parallax: { amplitudeX: 0.35, amplitudeY: 0.3, smoothing: 3 },
+};
 
 const VIEW_CORNERS = [
   [-1, -1],
@@ -13,13 +26,14 @@ const VIEW_CORNERS = [
 ];
 
 /**
- * Mobile orbits around the shop window and is kept from seeing past the facade.
- * Desktop has no controls: the camera drifts with the cursor (parallax) while looking at a fixed point.
+ * Orbit mode (always on mobile) rotates around the shop window and is kept from seeing past the facade.
+ * Parallax mode (desktop with DESKTOP_ORBIT off) drifts the camera with the cursor while looking at a fixed point.
  */
 export class View {
   constructor() {
     this.experience = Experience.getInstance();
     this.isMobile = this.experience.quality.isMobile;
+    this.useOrbit = this.isMobile || DESKTOP_ORBIT;
 
     this.camera = new THREE.PerspectiveCamera(
       45,
@@ -31,9 +45,15 @@ export class View {
     this.experience.scene.add(this.camera);
 
     this.target = new THREE.Vector3(0, 1, 0);
+    this.previousPosition = this.camera.position.clone();
+    this.cameraMoving = false;
 
-    if (this.isMobile) this.setControls();
+    if (this.useOrbit) this.setControls();
     else this.setParallax();
+
+    this.views = { indoor: INDOOR_VIEW };
+    this.transition = null;
+    if (!this.isMobile) this.setViewButtons();
 
     this.experience.ticker.events.on("tick", () => this.update(), 1);
     this.experience.viewport.events.on("change", () => this.resize());
@@ -45,7 +65,7 @@ export class View {
       this.experience.canvasElement,
     );
     this.controls.enableDamping = true;
-    this.controls.enablePan = false;
+    this.controls.enablePan = true;
     this.controls.minAzimuthAngle = -Math.PI / 5;
     this.controls.maxAzimuthAngle = Math.PI / 5;
     this.controls.minPolarAngle = Math.PI / 3;
@@ -61,9 +81,7 @@ export class View {
 
   setParallax() {
     this.parallax = {
-      amplitudeX: 0.75,
-      amplitudeY: 0.65,
-      smoothing: 2.5,
+      ...OUTDOOR_PARALLAX,
       basePosition: this.camera.position.clone(),
       right: new THREE.Vector3(1, 0, 0),
       up: new THREE.Vector3(0, 1, 0),
@@ -103,7 +121,7 @@ export class View {
     if (source.isPerspectiveCamera) this.camera.fov = source.fov;
     this.camera.updateProjectionMatrix();
 
-    if (this.isMobile) {
+    if (this.useOrbit) {
       const focus = this.getWorldBox([
         escaparate.frame,
         escaparate.letrero,
@@ -116,10 +134,10 @@ export class View {
         escaparate.model.getObjectByName("construccion"),
       ]);
 
-      this.camera.position.copy(MOBILE_CAMERA_POSITION);
+      if (this.isMobile) this.camera.position.copy(MOBILE_CAMERA_POSITION);
 
       const radius = this.camera.position.distanceTo(this.target);
-      this.controls.minDistance = radius * 0.5;
+      this.controls.minDistance = radius * 0.05;
       this.controls.maxDistance = radius * 3.8;
       this.controls.update();
       this.lastValidPosition.copy(this.camera.position);
@@ -132,6 +150,72 @@ export class View {
       parallax.up.crossVectors(parallax.right, forward).normalize();
 
       this.camera.lookAt(this.target);
+    }
+
+    this.views.outdoor = {
+      position: (this.useOrbit
+        ? this.camera.position
+        : this.parallax.basePosition
+      ).clone(),
+      target: this.target.clone(),
+      parallax: OUTDOOR_PARALLAX,
+    };
+
+    this.previousPosition.copy(this.camera.position);
+    // this.logCamera();
+  }
+
+  setViewButtons() {
+    this.viewButtons = [
+      ...document.querySelectorAll(".camera-switch [data-view]"),
+    ];
+    document.querySelector(".camera-switch")?.removeAttribute("hidden");
+
+    for (const button of this.viewButtons)
+      button.addEventListener("click", () => this.goTo(button.dataset.view));
+  }
+
+  goTo(name) {
+    const view = this.views[name];
+    if (!view) return;
+
+    for (const button of this.viewButtons)
+      button.setAttribute("aria-pressed", button.dataset.view === name);
+
+    const position = this.useOrbit
+      ? this.camera.position
+      : this.parallax.basePosition;
+
+    this.transition?.kill();
+    if (this.useOrbit) this.controls.enabled = false;
+
+    const ease = "power3.inOut";
+    const duration = 1.6;
+
+    this.transition = gsap
+      .timeline({
+        onComplete: () => {
+          this.transition = null;
+          if (!this.useOrbit) return;
+
+          this.controls.enabled = true;
+          this.controls.update();
+          this.lastValidPosition.copy(this.camera.position);
+        },
+      })
+      .to(position, { ...view.position, duration, ease }, 0)
+      .to(this.target, { ...view.target, duration, ease }, 0);
+
+    if (!this.useOrbit) {
+      this.transition.to(
+        this.parallax,
+        { ...view.parallax, duration, ease },
+        0,
+      );
+
+      const forward = view.target.clone().sub(view.position).normalize();
+      this.parallax.right.crossVectors(forward, this.camera.up).normalize();
+      this.parallax.up.crossVectors(this.parallax.right, forward).normalize();
     }
   }
 
@@ -198,16 +282,55 @@ export class View {
   }
 
   update() {
-    if (this.isMobile) {
-      this.controls.update(this.experience.ticker.delta);
+    if (this.useOrbit) this.updateOrbit();
+    else this.updateParallax();
 
-      if (!this.facade) return;
+    this.logWhenSettled();
+  }
 
-      if (!this.isViewInsideFacade()) this.clampToFacade();
-      this.lastValidPosition.copy(this.camera.position);
+  updateOrbit() {
+    if (this.transition) {
+      this.camera.lookAt(this.target);
       return;
     }
 
+    this.controls.update(this.experience.ticker.delta);
+
+    if (!this.facade) return;
+
+    if (!this.isViewInsideFacade()) this.clampToFacade();
+    this.lastValidPosition.copy(this.camera.position);
+  }
+
+  /**
+   * Logs once the camera stops moving, so damping has finished and the values are final
+   */
+  logWhenSettled() {
+    const moved =
+      this.camera.position.distanceToSquared(this.previousPosition) > 1e-10;
+    this.previousPosition.copy(this.camera.position);
+
+    if (moved) this.cameraMoving = true;
+    else if (this.cameraMoving) {
+      this.cameraMoving = false;
+      //   this.logCamera();
+    }
+  }
+
+  logCamera() {
+    const format = (vector) =>
+      vector
+        .toArray()
+        .map((value) => value.toFixed(3))
+        .join(", ");
+
+    console.log(
+      `camera position: new THREE.Vector3(${format(this.camera.position)})\n` +
+        `camera target:   new THREE.Vector3(${format(this.target)})`,
+    );
+  }
+
+  updateParallax() {
     const { parallax } = this;
     const lerp =
       1 - Math.exp(-parallax.smoothing * this.experience.ticker.delta);
@@ -221,7 +344,7 @@ export class View {
   }
 
   setDebug() {
-    if (this.isMobile) this.setControlsDebug();
+    if (this.useOrbit) this.setControlsDebug();
     else this.setParallaxDebug();
   }
 

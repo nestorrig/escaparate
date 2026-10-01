@@ -1,21 +1,18 @@
-*
-{
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
 html,
-body
-{
+body {
     height: 100%;
     overflow: hidden;
-    background: #004bff;
+    background: #000;
     font-family: Helvetica, Arial, sans-serif;
 }
 
-.webgl
-{
+.webgl {
     position: fixed;
     top: 0;
     left: 0;
@@ -25,8 +22,7 @@ body
 /**
  * Loading bar
  */
-.loading-bar
-{
+.loading-bar {
     position: absolute;
     top: 50%;
     width: 100%;
@@ -38,18 +34,156 @@ body
     z-index: 10;
 }
 
-.loading-bar.ended
-{
+.loading-bar.ended {
     transform: scaleX(0);
     transform-origin: 100% 0;
     transition: transform 1.5s ease-in-out;
 }
 
 /**
+ * Info
+ */
+.info {
+
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    z-index: 15;
+    color: #ffffff;
+    font-family: Geist, Helvetica, Arial, sans-serif;
+    text-shadow: 0 1px 12px #00000055;
+    animation: info-in 0.8s 1.2s ease both;
+}
+
+.info-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.info-title {
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.info-repo {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid #ffffff55;
+    background: #ffffff1a;
+    color: #ffffff;
+    backdrop-filter: blur(6px);
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.info-repo:hover {
+    background: #ffffff;
+    color: #004bff;
+    transform: scale(1.08);
+}
+
+.info-repo:focus-visible,
+.info-author a:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.info-author {
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+.info-author a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid #ffffff66;
+    transition: border-color 0.2s;
+}
+
+.info-author a:hover {
+    border-color: #ffffff;
+}
+
+/**
+ * Camera switch
+ */
+.camera-switch {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    z-index: 15;
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid #ffffff44;
+    border-radius: 999px;
+    background: #00000040;
+    backdrop-filter: blur(8px);
+    translate: -50% 0;
+    animation: info-in 0.8s 1.4s ease both;
+}
+
+.camera-switch[hidden] {
+    display: none;
+}
+
+.camera-switch button {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #ffffff;
+    font-family: Geist, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.25s, color 0.25s;
+}
+
+.camera-switch button:hover {
+    background: #ffffff22;
+}
+
+.camera-switch button[aria-pressed="true"] {
+    background: #ffffff;
+    color: #004bff;
+}
+
+.camera-switch button:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
+@keyframes info-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .info {
+        animation: none;
+    }
+}
+
+/**
  * Points of interest
  */
-.point
-{
+.point {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -57,14 +191,12 @@ body
     transition: opacity 0.28s ease;
 }
 
-.point.is-hidden
-{
+.point.is-hidden {
     opacity: 0;
     pointer-events: none;
 }
 
-.point .label
-{
+.point .label {
     position: absolute;
     top: -20px;
     left: -20px;
@@ -83,14 +215,12 @@ body
     transition: transform 0.3s, background 0.2s, color 0.2s;
 }
 
-.point .label:hover
-{
+.point .label:hover {
     background: #ffffff;
     color: #000000;
 }
 
-.point .text
-{
+.point .text {
     position: absolute;
     top: 30px;
     left: -120px;
@@ -108,8 +238,7 @@ body
     pointer-events: none;
 }
 
-.point .text strong
-{
+.point .text strong {
     display: block;
     margin-bottom: 6px;
     font-size: 11px;
@@ -118,21 +247,18 @@ body
     text-transform: uppercase;
 }
 
-.point:hover .text
-{
+.point:hover .text {
     opacity: 1;
 }
 
-.point.visible .label
-{
+.point.visible .label {
     transform: scale(1, 1);
 }
 
 /**
  * Modal
  */
-.piece-modal-backdrop
-{
+.piece-modal-backdrop {
     position: absolute;
     inset: 0;
     z-index: 20;
@@ -146,14 +272,12 @@ body
     transition: opacity 0.3s ease;
 }
 
-.piece-modal-backdrop.is-open
-{
+.piece-modal-backdrop.is-open {
     opacity: 1;
     pointer-events: auto;
 }
 
-.piece-modal-panel
-{
+.piece-modal-panel {
     width: 100%;
     max-width: 32rem;
     overflow: hidden;
@@ -165,29 +289,25 @@ body
         transform 0.35s ease;
 }
 
-.piece-modal-backdrop.is-open .piece-modal-panel
-{
+.piece-modal-backdrop.is-open .piece-modal-panel {
     opacity: 1;
     transform: translateY(0) scale(1);
 }
 
-.piece-modal-image
-{
+.piece-modal-image {
     display: block;
     width: 100%;
     height: auto;
     object-fit: cover;
 }
 
-.piece-modal-body
-{
+.piece-modal-body {
     padding: 20px;
     background: #ffffff;
     color: #000000;
 }
 
-.piece-modal-label
-{
+.piece-modal-label {
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -196,15 +316,13 @@ body
 }
 
 .piece-modal-author,
-.piece-modal-detail
-{
+.piece-modal-detail {
     margin-top: 8px;
     font-size: 14px;
     line-height: 1.5;
 }
 
-.piece-modal-close
-{
+.piece-modal-close {
     margin-top: 16px;
     padding: 8px 16px;
     border: none;
@@ -216,15 +334,21 @@ body
     cursor: pointer;
 }
 
-.piece-modal-close:hover
-{
+.piece-modal-close:hover {
     background: #f97316;
 }
 
-@media (max-width: 768px)
-{
-    .point .label
-    {
+@media (max-width: 768px) {
+    .info {
+        top: 16px;
+        left: 16px;
+    }
+
+    .info-title {
+        font-size: 22px;
+    }
+
+    .point .label {
         top: -16px;
         left: -16px;
         width: 32px;

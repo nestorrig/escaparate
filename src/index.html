@@ -1,17 +1,45 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Escaparate</title>
     <link rel="icon" href="./favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
 </head>
+
 <body>
     <div class="experience">
         <canvas class="webgl"></canvas>
 
         <div class="loading-bar"></div>
+
+        <header class="info">
+            <div class="info-title-row">
+                <h1 class="info-title">Escaparate</h1>
+                <a class="info-repo" href="https://github.com/nestorrig/escaparate" target="_blank"
+                    rel="noopener noreferrer" aria-label="Ver el código en GitHub" title="Ver el código">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                </a>
+            </div>
+            <p class="info-author">
+                Hecho por <a href="https://nestorrig.com" target="_blank" rel="noopener noreferrer">@nestorrig</a>
+            </p>
+        </header>
+
+        <nav class="camera-switch" aria-label="Cámara" hidden>
+            <button type="button" data-view="outdoor" aria-pressed="true">Outdoor</button>
+            <button type="button" data-view="indoor" aria-pressed="false">Indoor</button>
+        </nav>
 
         <div class="points"></div>
 
@@ -30,4 +58,5 @@
 
     <script type="module" src="./index.js"></script>
 </body>
+
 </html>
