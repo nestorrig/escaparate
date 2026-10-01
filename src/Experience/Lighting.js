@@ -93,7 +93,7 @@ export class Lighting {
   }
 
   setAmbient() {
-    this.ambient = new THREE.AmbientLight("#ffffff", 0.2);
+    this.ambient = new THREE.AmbientLight("#ffffff", 0.1);
     this.experience.scene.add(this.ambient);
   }
 
@@ -104,7 +104,7 @@ export class Lighting {
     THREE.RectAreaLightNode.setLTC(RectAreaLightTexturesLib.init());
 
     const intensities = {
-      lampara: 3,
+      lampara: 2,
       "lampara-small": 10.2,
       "lampara-small1": 10.4,
     };
