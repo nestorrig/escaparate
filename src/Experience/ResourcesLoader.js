@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+import { HDRLoader } from 'three/addons/loaders/HDRLoader.js'
 import { Events } from './Events.js'
 
 export class ResourcesLoader
@@ -28,11 +29,12 @@ export class ResourcesLoader
         this.loaders = {
             gltf: new GLTFLoader(this.manager),
             texture: new THREE.TextureLoader(this.manager),
+            hdr: new HDRLoader(this.manager),
         }
     }
 
     /**
-     * @param {Array<[string, string, 'gltf' | 'texture', Function?]>} files [ name, path, type, callback ]
+     * @param {Array<[string, string, 'gltf' | 'texture' | 'hdr', Function?]>} files [ name, path, type, callback ]
      */
     async load(files)
     {

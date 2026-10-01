@@ -7,11 +7,9 @@ import { Viewport } from './Viewport.js'
 import { ResourcesLoader } from './ResourcesLoader.js'
 import { Rendering } from './Rendering.js'
 import { View } from './View.js'
-import { Lighting } from './Lighting.js'
+import { Lighting, ENVIRONMENTS, DEFAULT_ENVIRONMENT, setupEnvironmentTexture } from './Lighting.js'
 import { Overlay } from './Overlay.js'
 import { World } from './World/World.js'
-import { Modal } from './Modal.js'
-import { Annotations } from './Annotations.js'
 
 export class Experience
 {
@@ -39,7 +37,8 @@ export class Experience
         this.sceneReady = false
 
         this.scene = new THREE.Scene()
-        this.scene.background = new THREE.Color('#fc7f41')
+        this.backgroundColor = new THREE.Color('#004bff')
+        this.scene.background = this.backgroundColor
 
         this.quality = new Quality()
         this.ticker = new Ticker()
@@ -64,20 +63,23 @@ export class Experience
         })
 
         this.resources = await this.resourcesLoader.load([
-            [ 'escaparateModel', './escaparate_modelo.glb', 'gltf' ],
+            [ 'escaparateModel', './escaparate_2.glb', 'gltf' ],
             [ 'michelleModel', './Michelle.glb', 'gltf' ],
-            [ 'alphaTexture', './alpha.png', 'texture', (texture) =>
-            {
-                texture.colorSpace = THREE.NoColorSpace
-                texture.flipY = false
-                texture.wrapS = THREE.ClampToEdgeWrapping
-                texture.wrapT = THREE.ClampToEdgeWrapping
-            } ],
+            [ 'posterTexture', './poster.png', 'texture', this.setupColorTexture ],
+            [ 'letreroTexture', './letrero.png', 'texture', this.setupColorTexture ],
+            [ 'letreroBigTexture', './letrero-big.png', 'texture', this.setupColorTexture ],
+            [ 'environmentTexture', ENVIRONMENTS[DEFAULT_ENVIRONMENT], 'hdr', setupEnvironmentTexture ],
         ])
 
-        this.lighting = new Lighting()
         this.world = new World()
-        this.modal = new Modal()
-        this.annotations = new Annotations()
+        this.lighting = new Lighting()
+        this.view.setFromCameras(this.world.escaparate.cameras)
+    }
+
+    setupColorTexture(texture)
+    {
+        texture.colorSpace = THREE.SRGBColorSpace
+        texture.flipY = false
+        texture.anisotropy = 8
     }
 }

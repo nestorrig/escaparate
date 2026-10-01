@@ -1,11 +1,10 @@
 import * as THREE from 'three/webgpu'
 import { Experience } from '../Experience.js'
-import { Mirror } from './Mirror.js'
 
 const FLOATS = [
-    { speed: 1.2, rotationIntensity: 0.12, floatIntensity: 0.35, floatingRange: [ - 0.04, 0.04 ] },
-    { speed: 1.6, rotationIntensity: 0.1, floatIntensity: 0.4, floatingRange: [ - 0.05, 0.05 ] },
-    { speed: 1.35, rotationIntensity: 0.14, floatIntensity: 0.3, floatingRange: [ - 0.035, 0.035 ] },
+    { speed: 1.2, rotationIntensity: 0.3, floatIntensity: 0.6, floatingRange: [ - 0.07, 0.07 ] },
+    { speed: 1.6, rotationIntensity: 0.25, floatIntensity: 0.65, floatingRange: [ - 0.08, 0.08 ] },
+    { speed: 1.35, rotationIntensity: 0.35, floatIntensity: 0.55, floatingRange: [ - 0.065, 0.065 ] },
 ]
 
 export class Escaparate
@@ -14,21 +13,20 @@ export class Escaparate
     {
         this.experience = Experience.getInstance()
 
-        this.group = new THREE.Group()
-        this.group.position.set(0, 0.3, 0)
-        parent.add(this.group)
+        const gltf = this.experience.resources.escaparateModel
 
-        this.model = this.experience.resources.escaparateModel.scene
-        this.group.add(this.model)
+        this.model = gltf.scene
+        parent.add(this.model)
+
+        this.cameras = gltf.cameras ?? []
 
         this.setMeshes()
-        this.center()
+        this.setTextures()
         this.setFloats()
-        this.setMirror()
 
         this.anchors = {
-            poster: this.images[1].parent,
-            movil: this.ducks[1],
+            poster: this.poster,
+            movil: this.skates[1],
         }
 
         this.experience.ticker.events.on('tick', () => this.update())
@@ -36,10 +34,6 @@ export class Escaparate
 
     setMeshes()
     {
-        const alphaTexture = this.experience.resources.alphaTexture
-
-        this.images = []
-
         this.model.traverse((child) =>
         {
             if(!child.isMesh)
@@ -47,51 +41,78 @@ export class Escaparate
 
             child.castShadow = true
             child.receiveShadow = true
-
-            // The sign texture is authored upside down in the glb
-            if(child.name.startsWith('LETRERO'))
-                child.scale.y = - 1
-
-            if(child.name.startsWith('IMAGEN'))
-            {
-                child.material.alphaMap = alphaTexture
-                child.material.transparent = true
-                child.material.needsUpdate = true
-                this.images.push(child)
-            }
         })
 
-        this.ducks = this.model.children.filter((child) => child.name.startsWith('pato'))
-        this.glass = this.model.getObjectByName('VIDRIO')
+        this.poster = this.model.getObjectByName('poster')
+        this.letrero = this.model.getObjectByName('letrero')
+        this.letreroBig = this.model.getObjectByName('letrero-big')
+        this.frame = this.model.getObjectByName('marco')
+        this.lamp = this.model.getObjectByName('lampara')
+        this.skates = this.model.getObjectByName('Skates').children.filter((child) => child.isMesh)
     }
 
-    center()
+    /**
+     * poster and letreros share their material with the walls in the glb, so each one gets its own
+     */
+    setTextures()
     {
-        this.model.updateMatrixWorld(true)
+        const resources = this.experience.resources
 
-        const box = new THREE.Box3().setFromObject(this.model)
-        const center = box.getCenter(new THREE.Vector3())
+        this.applyTexture(this.poster, resources.posterTexture)
+        this.applyTexture(this.letrero, resources.letreroTexture)
+        this.applyTexture(this.letreroBig, resources.letreroBigTexture)
+    }
 
-        this.model.worldToLocal(center)
-        this.model.position.sub(center)
+    applyTexture(mesh, texture)
+    {
+        this.normalizeUvs(mesh.geometry)
+
+        mesh.material = new THREE.MeshStandardMaterial({
+            map: texture,
+            roughness: 1,
+            metalness: 0,
+        })
+    }
+
+    /**
+     * The glb UVs of these planes are a sub-region of a shared unwrap; stretch them to 0-1 so the whole image fits
+     */
+    normalizeUvs(geometry)
+    {
+        const uv = geometry.attributes.uv
+        const min = new THREE.Vector2(Infinity, Infinity)
+        const max = new THREE.Vector2(- Infinity, - Infinity)
+        const point = new THREE.Vector2()
+
+        for(let i = 0; i < uv.count; i++)
+        {
+            point.fromBufferAttribute(uv, i)
+            min.min(point)
+            max.max(point)
+        }
+
+        const size = max.clone().sub(min)
+
+        for(let i = 0; i < uv.count; i++)
+        {
+            point.fromBufferAttribute(uv, i).sub(min).divide(size)
+            uv.setXY(i, point.x, point.y)
+        }
+
+        uv.needsUpdate = true
     }
 
     setFloats()
     {
-        this.floats = this.ducks.map((duck, index) => ({
-            object: duck,
+        this.floats = this.skates.map((skate, index) => ({
+            object: skate,
             ...FLOATS[index % FLOATS.length],
             offset: Math.random() * 10000,
-            basePosition: duck.position.clone(),
-            baseQuaternion: duck.quaternion.clone(),
+            basePosition: skate.position.clone(),
+            baseQuaternion: skate.quaternion.clone(),
             euler: new THREE.Euler(),
             quaternion: new THREE.Quaternion(),
         }))
-    }
-
-    setMirror()
-    {
-        this.mirror = new Mirror(this.glass)
     }
 
     update()

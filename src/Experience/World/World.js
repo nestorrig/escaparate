@@ -9,21 +9,11 @@ export class World
     {
         this.experience = Experience.getInstance()
 
+        // Kept in the glb coordinates so the cameras authored in the model stay valid
         this.group = new THREE.Group()
         this.experience.scene.add(this.group)
 
         this.escaparate = new Escaparate(this.group)
-        this.michelle = new Michelle(this.group)
-
-        this.center()
-    }
-
-    center()
-    {
-        this.group.updateMatrixWorld(true)
-
-        const box = new THREE.Box3().setFromObject(this.group)
-        const center = box.getCenter(new THREE.Vector3())
-        this.group.position.sub(center)
+        this.michelle = new Michelle(this.escaparate.frame)
     }
 }
