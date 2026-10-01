@@ -23,7 +23,14 @@ npm install
 npm run dev      # servidor de desarrollo (abierto a la red local)
 npm run build    # build de producción en dist/
 npm run preview  # sirve el build
+npm run deploy   # build + publica dist/ en la rama gh-pages
 ```
+
+## Deploy en GitHub Pages
+
+`npm run deploy` construye el proyecto y sube `dist/` a la rama `gh-pages` con [gh-pages](https://github.com/tschaub/gh-pages). En GitHub, en **Settings → Pages**, la fuente debe ser *Deploy from a branch* con la rama `gh-pages` y la carpeta `/ (root)`.
+
+Vite usa `base: './'`, así que el sitio funciona en cualquier subruta (`/escaparate/`) sin configurar nada más.
 
 ## Parámetros de URL
 
